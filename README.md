@@ -1,6 +1,15 @@
-# Welcome to your Expo app 👋
+# Recipe App 👨‍🍳
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application built with [Expo](https://expo.dev) that allows users to discover, save, and create recipes.
+
+## About
+
+Recipe App is a simple yet powerful platform for food enthusiasts to:
+
+- Browse and discover new recipes
+- Create and share their own recipes
+- Save favorites for easy access later
+- Rate and provide feedback on recipes
 
 ## Get started
 
@@ -21,30 +30,72 @@ In the output, you'll find options to open the app in a
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo Go](https://expo.dev/go)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## App Structure
 
-## Get a fresh project
+### Core Pages
 
-When you're ready, run:
+#### 1. Authentication
 
-```bash
-npm run reset-project
-```
+- Login/Signup with email/password or social login options
+- User Profile with basic information, profile picture, and dietary preferences
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+#### 2. Home/Discovery
+
+- Clean feed of recipes with filters
+- Search functionality
+- Categories (breakfast, lunch, dinner, desserts, etc.)
+- Recently viewed recipes
+
+#### 3. Recipe Creation
+
+- Single-page form with:
+  - Recipe name and description
+  - Ingredients list (add/remove items)
+  - Step-by-step instructions
+  - Photo upload
+  - Basic details (cooking time, servings, difficulty)
+
+#### 4. Recipe Detail
+
+- Recipe image display
+- Ingredients list
+- Preparation steps
+- Basic information (time, servings)
+- Save/favorite button
+- Star rating system
+
+#### 5. Saved Recipes
+
+- List of saved recipes
+- Basic sorting/filtering options
+
+### User Journey
+
+1. User signs up/logs in
+2. Browses or searches for recipes
+3. Views recipe details
+4. Saves favorite recipes
+5. Creates and shares own recipes
+
+### Appwrite Integration
+
+The app uses Appwrite for:
+
+- Authentication: User accounts and sessions
+- Database: Recipe storage, user profiles, saved recipes
+- Storage: Recipe images
+- Realtime: Live feed updates
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
+To learn more about developing with Expo:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [Expo documentation](https://docs.expo.dev/)
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/)
 
 ## Join the community
-
-Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
