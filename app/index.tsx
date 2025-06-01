@@ -33,6 +33,15 @@ export default function WelcomeScreen() {
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
         <Text style={styles.footer}>🍳 Start your culinary journey today!</Text>
+
+        {/* Testing */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/home")}
+        >
+          <Text style={styles.buttonText}>Test</Text>
+        </TouchableOpacity>
+        {/* Testing */}
       </View>
     </SafeAreaView>
   );
