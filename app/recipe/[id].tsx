@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Image,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Text,
+  TextInput,
+  FlatList,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -26,17 +28,41 @@ const mockRecipe = {
   difficulty: "Easy",
 };
 
+const mockComments = [
+  { id: "c1", user: "Alice", text: "Delicious! My family loved it.", rating: 5 },
+  { id: "c2", user: "Bob", text: "Easy to follow and tasty.", rating: 4 },
+];
+
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  // fetch recipe by id from API or state management
-  // For this example, we are using a mock recipe object
+
+  // Ratings & feedback state
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState("");
+  const [comments, setComments] = useState(mockComments);
+
+  const handleAddComment = () => {
+    if (userComment.trim() && userRating > 0) {
+      setComments([
+        ...comments,
+        {
+          id: Math.random().toString(),
+          user: "You",
+          text: userComment,
+          rating: userRating,
+        },
+      ]);
+      setUserComment("");
+      setUserRating(0);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       <Image source={mockRecipe.image} style={styles.image} />
       <View style={styles.headerRow}>
-        <Text>{mockRecipe.title}</Text>
+        <Text style={styles.title}>{mockRecipe.title}</Text>
         <TouchableOpacity style={styles.saveBtn}>
           <Text style={styles.saveBtnText}>♡</Text>
         </TouchableOpacity>
@@ -47,11 +73,11 @@ export default function RecipeDetail() {
         <Text>🍽 {mockRecipe.servings} servings</Text>
         <Text>⭐ {mockRecipe.difficulty}</Text>
       </View>
-      <Text style={{ marginTop: 18 }}>Ingredients</Text>
+      <Text style={styles.sectionTitle}>Ingredients</Text>
       {mockRecipe.ingredients.map((item, idx) => (
         <Text key={idx}>• {item}</Text>
       ))}
-      <Text style={{ marginTop: 18 }}>Steps</Text>
+      <Text style={styles.sectionTitle}>Steps</Text>
       {mockRecipe.steps.map((step, idx) => (
         <Text key={idx}>
           {idx + 1}. {step}
@@ -66,6 +92,52 @@ export default function RecipeDetail() {
       >
         <Text style={styles.editBtnText}>Edit Recipe</Text>
       </TouchableOpacity>
+
+      {/* Ratings & Feedback Section */}
+      <View style={styles.feedbackSection}>
+        <Text style={styles.sectionTitle}>Rate & Comment</Text>
+        <View style={styles.starsRow}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <TouchableOpacity
+              key={star}
+              onPress={() => setUserRating(star)}
+              style={styles.starBtn}
+            >
+              <Text style={[styles.star, userRating >= star && styles.starActive]}>
+                ★
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TextInput
+          style={styles.commentInput}
+          placeholder="Leave a comment..."
+          value={userComment}
+          onChangeText={setUserComment}
+          multiline
+        />
+        <TouchableOpacity style={styles.addCommentBtn} onPress={handleAddComment}>
+          <Text style={styles.addCommentBtnText}>Submit</Text>
+        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Feedback</Text>
+        <FlatList
+          data={comments}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.commentCard}>
+              <Text style={styles.commentUser}>
+                {item.user}{" "}
+                <Text style={styles.commentStars}>
+                  {"★".repeat(item.rating)}
+                  {"☆".repeat(5 - item.rating)}
+                </Text>
+              </Text>
+              <Text style={styles.commentText}>{item.text}</Text>
+            </View>
+          )}
+          contentContainerStyle={{ paddingBottom: 24 }}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -78,6 +150,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  title: { fontWeight: "bold", fontSize: 22, color: "#0a7ea4" },
   saveBtn: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -87,6 +160,13 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 22, color: "#FF6B6B" },
   desc: { color: "#888", marginVertical: 8 },
   infoRow: { flexDirection: "row", gap: 16, marginVertical: 8 },
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginTop: 18,
+    marginBottom: 8,
+    color: "#0a7ea4",
+  },
   cookBtn: {
     backgroundColor: "#0a7ea4",
     borderRadius: 8,
@@ -101,6 +181,50 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: "center",
+    marginBottom: 24,
   },
   editBtnText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  feedbackSection: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 24,
+    elevation: 1,
+  },
+  starsRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 4,
+  },
+  starBtn: { padding: 4 },
+  star: { fontSize: 28, color: "#ccc" },
+  starActive: { color: "#FFB300" },
+  commentInput: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#eee",
+    marginBottom: 12,
+    minHeight: 40,
+  },
+  addCommentBtn: {
+    backgroundColor: "#0a7ea4",
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  addCommentBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  commentCard: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  commentUser: { fontWeight: "bold", color: "#0a7ea4" },
+  commentStars: { color: "#FFB300", fontSize: 14 },
+  commentText: { color: "#333", marginTop: 2 },
 });
