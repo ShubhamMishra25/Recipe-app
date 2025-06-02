@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text type="title" style={styles.header}>
+      <Text style={styles.header}>
         🍽️ Discover Recipes
       </Text>
       <FlatList
@@ -48,7 +48,7 @@ export default function HomeScreen() {
           >
             <Image source={item.image} style={styles.image} />
             <View style={styles.cardContent}>
-              <Text type="subtitle">{item.title}</Text>
+              <Text>{item.title}</Text>
               <Text style={styles.desc}>{item.description}</Text>
             </View>
           </TouchableOpacity>

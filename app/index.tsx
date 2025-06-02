@@ -37,7 +37,7 @@ export default function WelcomeScreen() {
         {/* Testing */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => router.push("/home")}
+          onPress={() => router.push("/recipe/1")}
         >
           <Text style={styles.buttonText}>Test</Text>
         </TouchableOpacity>

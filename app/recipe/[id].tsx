@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Image, StyleSheet, ScrollView, TouchableOpacity, Text } from "react-native";
+import {
+  View,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 const mockRecipe = {
@@ -29,7 +36,7 @@ export default function RecipeDetail() {
     <ScrollView style={styles.container}>
       <Image source={mockRecipe.image} style={styles.image} />
       <View style={styles.headerRow}>
-        <Text type="title">{mockRecipe.title}</Text>
+        <Text>{mockRecipe.title}</Text>
         <TouchableOpacity style={styles.saveBtn}>
           <Text style={styles.saveBtnText}>♡</Text>
         </TouchableOpacity>
@@ -40,16 +47,24 @@ export default function RecipeDetail() {
         <Text>🍽 {mockRecipe.servings} servings</Text>
         <Text>⭐ {mockRecipe.difficulty}</Text>
       </View>
-      <Text type="subtitle" style={{ marginTop: 18 }}>Ingredients</Text>
+      <Text style={{ marginTop: 18 }}>Ingredients</Text>
       {mockRecipe.ingredients.map((item, idx) => (
         <Text key={idx}>• {item}</Text>
       ))}
-      <Text type="subtitle" style={{ marginTop: 18 }}>Steps</Text>
+      <Text style={{ marginTop: 18 }}>Steps</Text>
       {mockRecipe.steps.map((step, idx) => (
-        <Text key={idx}>{idx + 1}. {step}</Text>
+        <Text key={idx}>
+          {idx + 1}. {step}
+        </Text>
       ))}
       <TouchableOpacity style={styles.cookBtn}>
         <Text style={styles.cookBtnText}>Start Cooking</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => router.push(`/recipe/edit/${mockRecipe.id}`)}
+        style={styles.editBtn}
+      >
+        <Text style={styles.editBtnText}>Edit Recipe</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -58,7 +73,11 @@ export default function RecipeDetail() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF5E6", padding: 16 },
   image: { width: "100%", height: 220, borderRadius: 16, marginBottom: 16 },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   saveBtn: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -77,4 +96,11 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   cookBtnText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  editBtn: {
+    backgroundColor: "#FF6B6B",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+  },
+  editBtnText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
 });

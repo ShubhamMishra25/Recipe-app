@@ -9,14 +9,32 @@ import {
   SafeAreaView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
-export default function CreateRecipe() {
+// Mock existing recipe data
+const mockRecipe = {
+  id: "1",
+  title: "Spaghetti Carbonara",
+  description: "Classic Italian pasta with creamy sauce.",
+  image: require("@/assets/images/spaghetti.jpg"),
+  ingredients: ["Spaghetti", "Eggs", "Pancetta", "Parmesan", "Black Pepper"],
+  steps: [
+    "Boil pasta until al dente.",
+    "Fry pancetta until crispy.",
+    "Mix eggs and cheese.",
+    "Combine all and season.",
+  ],
+};
+
+export default function EditRecipe() {
+  const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [ingredients, setIngredients] = useState<string[]>([""]);
-  const [steps, setSteps] = useState<string[]>([""]);
+
+  // Pre-fill with existing recipe data
+  const [title, setTitle] = useState(mockRecipe.title);
+  const [desc, setDesc] = useState(mockRecipe.description);
+  const [ingredients, setIngredients] = useState<string[]>(mockRecipe.ingredients);
+  const [steps, setSteps] = useState<string[]>(mockRecipe.steps);
   const [image, setImage] = useState<string | null>(null);
 
   const addIngredient = () => setIngredients([...ingredients, ""]);
@@ -24,7 +42,7 @@ export default function CreateRecipe() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
@@ -35,17 +53,22 @@ export default function CreateRecipe() {
     }
   };
 
+  const handleSave = () => {
+    // TODO: Save edited recipe (Appwrite integration)
+    router.back();
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF5E6" }}>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
-          📝 Create Recipe
+          ✏️ Edit Recipe
         </Text>
         <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
           {image ? (
             <Image source={{ uri: image }} style={styles.recipeImage} />
           ) : (
-            <Text style={styles.imagePickerText}>+ Add Photo</Text>
+            <Image source={mockRecipe.image} style={styles.recipeImage} />
           )}
         </TouchableOpacity>
         <TextInput
@@ -95,8 +118,8 @@ export default function CreateRecipe() {
         <TouchableOpacity style={styles.addBtn} onPress={addStep}>
           <Text style={styles.addBtnText}>+ Add Step</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
-          <Text style={styles.saveBtnText}>Save Recipe</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+          <Text style={styles.saveBtnText}>Save Changes</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -120,11 +143,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eee",
     overflow: "hidden",
-  },
-  imagePickerText: {
-    color: "#0a7ea4",
-    fontWeight: "bold",
-    fontSize: 18,
   },
   recipeImage: {
     width: "100%",
