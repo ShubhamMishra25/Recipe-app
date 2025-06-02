@@ -29,7 +29,12 @@ const mockRecipe = {
 };
 
 const mockComments = [
-  { id: "c1", user: "Alice", text: "Delicious! My family loved it.", rating: 5 },
+  {
+    id: "c1",
+    user: "Alice",
+    text: "Delicious! My family loved it.",
+    rating: 5,
+  },
   { id: "c2", user: "Bob", text: "Easy to follow and tasty.", rating: 4 },
 ];
 
@@ -92,6 +97,12 @@ export default function RecipeDetail() {
       >
         <Text style={styles.editBtnText}>Edit Recipe</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.cookBtn}
+        onPress={() => router.push(`/recipe/cooking-mode/${mockRecipe.id}`)}
+      >
+        <Text style={styles.cookBtnText}>Cooking Mode</Text>
+      </TouchableOpacity>
 
       {/* Ratings & Feedback Section */}
       <View style={styles.feedbackSection}>
@@ -103,7 +114,9 @@ export default function RecipeDetail() {
               onPress={() => setUserRating(star)}
               style={styles.starBtn}
             >
-              <Text style={[styles.star, userRating >= star && styles.starActive]}>
+              <Text
+                style={[styles.star, userRating >= star && styles.starActive]}
+              >
                 ★
               </Text>
             </TouchableOpacity>
@@ -116,7 +129,10 @@ export default function RecipeDetail() {
           onChangeText={setUserComment}
           multiline
         />
-        <TouchableOpacity style={styles.addCommentBtn} onPress={handleAddComment}>
+        <TouchableOpacity
+          style={styles.addCommentBtn}
+          onPress={handleAddComment}
+        >
           <Text style={styles.addCommentBtnText}>Submit</Text>
         </TouchableOpacity>
         <Text style={styles.sectionTitle}>Feedback</Text>
