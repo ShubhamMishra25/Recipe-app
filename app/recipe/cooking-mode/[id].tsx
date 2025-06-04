@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,29 +6,41 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useKeepAwake } from "expo-keep-awake";
-
-const mockRecipe = {
-  id: "1",
-  title: "Spaghetti Carbonara",
-  steps: [
-    "Boil pasta until al dente.",
-    "Fry pancetta until crispy.",
-    "Mix eggs and cheese.",
-    "Combine all and season.",
-  ],
-};
+import recipeService from "@/services/recipeService";
 
 export default function CookingMode() {
   useKeepAwake(); // Keeps the screen awake
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [stepIndex, setStepIndex] = React.useState(0);
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [stepIndex, setStepIndex] = useState(0);
 
-  // In a real app, fetch recipe by id
-  const steps = mockRecipe.steps;
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      setLoading(true);
+      const { data } = await recipeService.getRecipeById(id);
+      setRecipe(data);
+      setLoading(false);
+    };
+    fetchRecipe();
+  }, [id]);
+
+  if (loading || !recipe) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </SafeAreaView>
+    );
+  }
+
+  const steps = Array.isArray(recipe.steps) && recipe.steps.length > 0
+    ? recipe.steps
+    : ["No steps available."];
 
   const nextStep = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1));
   const prevStep = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -37,7 +49,7 @@ export default function CookingMode() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>👨‍🍳 Cooking Mode</Text>
-        <Text style={styles.recipeTitle}>{mockRecipe.title}</Text>
+        <Text style={styles.recipeTitle}>{recipe.title}</Text>
       </View>
       <View style={styles.stepContainer}>
         <Text style={styles.stepLabel}>

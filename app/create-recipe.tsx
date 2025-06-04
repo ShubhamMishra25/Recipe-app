@@ -9,12 +9,22 @@ import {
   SafeAreaView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import recipeService from "@/services/recipeService";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+
+const difficulties = ["Easy", "Medium", "Hard"];
+const categories = ["Breakfast", "Lunch", "Dinner", "Dessert"];
 
 export default function CreateRecipe() {
+  const { user } = useAuth();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const [cookingTime, setCookingTime] = useState("");
+  const [servings, setServings] = useState("");
+  const [difficulty, setDifficulty] = useState(difficulties[0]);
+  const [category, setCategory] = useState(categories[0]);
   const [ingredients, setIngredients] = useState<string[]>([""]);
   const [steps, setSteps] = useState<string[]>([""]);
   const [image, setImage] = useState<string | null>(null);
@@ -24,7 +34,7 @@ export default function CreateRecipe() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
@@ -32,6 +42,36 @@ export default function CreateRecipe() {
 
     if (!result.canceled && result.assets.length > 0) {
       setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!title.trim() || !desc.trim()) return;
+    let imageFile = null;
+    if (image) {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      imageFile = new File([blob], "recipe-image.jpg", { type: blob.type });
+    }
+    const data = {
+      title,
+      description: desc,
+      ingredients,
+      steps,
+      cookingTime: parseInt(cookingTime, 10),
+      servings: parseInt(servings, 10),
+      difficulty,
+      category,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      userId: user?.$id,
+    };
+    const result = await recipeService.createRecipe(data, imageFile);
+    if (!result.error) {
+      alert("Recipe saved successfully!");
+      router.back();
+    } else {
+      alert("Failed to save recipe: " + result.error);
     }
   };
 
@@ -95,7 +135,55 @@ export default function CreateRecipe() {
         <TouchableOpacity style={styles.addBtn} onPress={addStep}>
           <Text style={styles.addBtnText}>+ Add Step</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
+        <TextInput
+          style={styles.input}
+          placeholder="Cooking Time (minutes)"
+          value={cookingTime}
+          onChangeText={setCookingTime}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Servings"
+          value={servings}
+          onChangeText={setServings}
+          keyboardType="numeric"
+        />
+        <Text style={styles.sectionTitle}>Difficulty</Text>
+        {difficulties.map((d) => (
+          <TouchableOpacity
+            key={d}
+            style={[
+              styles.addBtn,
+              difficulty === d && { backgroundColor: "#FF6B6B" },
+            ]}
+            onPress={() => setDifficulty(d)}
+          >
+            <Text
+              style={[styles.addBtnText, difficulty === d && { color: "#fff" }]}
+            >
+              {d}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <Text style={styles.sectionTitle}>Category</Text>
+        {categories.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            style={[
+              styles.addBtn,
+              category === cat && { backgroundColor: "#FF6B6B" },
+            ]}
+            onPress={() => setCategory(cat)}
+          >
+            <Text
+              style={[styles.addBtnText, category === cat && { color: "#fff" }]}
+            >
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveBtnText}>Save Recipe</Text>
         </TouchableOpacity>
       </ScrollView>

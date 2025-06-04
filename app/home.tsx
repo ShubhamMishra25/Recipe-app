@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -7,33 +7,11 @@ import {
   FlatList,
   Text,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-
-const mockRecipes = [
-  {
-    id: "1",
-    title: "Spaghetti Carbonara",
-    description: "Classic Italian pasta with creamy sauce.",
-    image: require("@/assets/images/spaghetti.jpg"),
-    category: "Dinner",
-  },
-  {
-    id: "2",
-    title: "Avocado Toast",
-    description: "Healthy breakfast with smashed avocado.",
-    image: require("@/assets/images/avocado-toast.jpg"),
-    category: "Breakfast",
-  },
-  {
-    id: "3",
-    title: "Berry Smoothie Bowl",
-    description: "Refreshing and colorful smoothie bowl.",
-    image: require("@/assets/images/smoothie-bowl.jpg"),
-    category: "Breakfast",
-  },
-];
+import recipeService from "@/services/recipeService";
 
 const categories = ["All", "Breakfast", "Lunch", "Dinner", "Dessert"];
 
@@ -42,8 +20,23 @@ export default function HomeScreen() {
   const { user, loading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredRecipes = mockRecipes.filter((recipe) => {
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      setLoading(true);
+      const { data, error } = await recipeService.listRecipes();
+      if (!error) {
+        setRecipes(data);
+      }
+      setLoading(false);
+    };
+    fetchRecipes();
+  }, []);
+
+
+  const filteredRecipes = recipes.filter((recipe) => {
     const matchesSearch =
       recipe.title.toLowerCase().includes(search.toLowerCase()) ||
       recipe.description.toLowerCase().includes(search.toLowerCase());
@@ -51,6 +44,14 @@ export default function HomeScreen() {
       selectedCategory === "All" || recipe.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -84,13 +85,20 @@ export default function HomeScreen() {
       </View>
       <FlatList
         data={filteredRecipes}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.$id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => router.push(`/recipe/${item.id}`)}
+            onPress={() => router.push(`/recipe/${item.$id}`)}
           >
-            <Image source={item.image} style={styles.image} />
+            <Image
+              source={
+                item.imageId
+                  ? { uri: recipeService.getRecipeImageUrl(item.imageId) }
+                  : require("@/assets/images/spaghetti.jpg")
+              }
+              style={styles.image}
+            />
             <View style={styles.cardContent}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.desc}>{item.description}</Text>

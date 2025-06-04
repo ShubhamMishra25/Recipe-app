@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Image,
@@ -8,44 +8,35 @@ import {
   Text,
   TextInput,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-
-const mockRecipe = {
-  id: "1",
-  title: "Spaghetti Carbonara",
-  description: "Classic Italian pasta with creamy sauce.",
-  image: require("@/assets/images/spaghetti.jpg"),
-  ingredients: ["Spaghetti", "Eggs", "Pancetta", "Parmesan", "Black Pepper"],
-  steps: [
-    "Boil pasta until al dente.",
-    "Fry pancetta until crispy.",
-    "Mix eggs and cheese.",
-    "Combine all and season.",
-  ],
-  time: "25 min",
-  servings: 2,
-  difficulty: "Easy",
-};
-
-const mockComments = [
-  {
-    id: "c1",
-    user: "Alice",
-    text: "Delicious! My family loved it.",
-    rating: 5,
-  },
-  { id: "c2", user: "Bob", text: "Easy to follow and tasty.", rating: 4 },
-];
+import recipeService from "@/services/recipeService";
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
+  const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   // Ratings & feedback state
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
-  const [comments, setComments] = useState(mockComments);
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      setLoading(true);
+      const { data, error } = await recipeService.getRecipeById(id);
+      if (data) setRecipe(data);
+      setLoading(false);
+    };
+    fetchRecipe();
+    // Optionally, fetch comments from Appwrite here when implementing comments collection
+    setComments([]); // Clear or fetch comments
+  }, [id]);
 
   const handleAddComment = () => {
     if (userComment.trim() && userRating > 0) {
@@ -63,27 +54,66 @@ export default function RecipeDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    Alert.alert(
+      "Delete Recipe",
+      "Are you sure you want to delete this recipe?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const result = await recipeService.deleteRecipe(recipe.$id);
+            if (!result.error) {
+              Alert.alert("Deleted", "Recipe deleted successfully.");
+              router.replace("/home");
+            } else {
+              Alert.alert("Error", result.error || "Failed to delete recipe.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading || !recipe) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </View>
+    );
+  }
+
+
   return (
     <ScrollView style={styles.container}>
-      <Image source={mockRecipe.image} style={styles.image} />
+      <Image
+        source={
+          recipe.imageId
+            ? { uri: recipeService.getRecipeImageUrl(recipe.imageId) }
+            : require("@/assets/images/spaghetti.jpg")
+        }
+        style={styles.image}
+      />
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{mockRecipe.title}</Text>
+        <Text style={styles.title}>{recipe.title}</Text>
         <TouchableOpacity style={styles.saveBtn}>
           <Text style={styles.saveBtnText}>♡</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.desc}>{mockRecipe.description}</Text>
+      <Text style={styles.desc}>{recipe.description}</Text>
       <View style={styles.infoRow}>
-        <Text>⏱ {mockRecipe.time}</Text>
-        <Text>🍽 {mockRecipe.servings} servings</Text>
-        <Text>⭐ {mockRecipe.difficulty}</Text>
+        <Text>⏱ {recipe.time}</Text>
+        <Text>🍽 {recipe.servings} servings</Text>
+        <Text>⭐ {recipe.difficulty}</Text>
       </View>
       <Text style={styles.sectionTitle}>Ingredients</Text>
-      {mockRecipe.ingredients.map((item, idx) => (
+      {recipe.ingredients.map((item, idx) => (
         <Text key={idx}>• {item}</Text>
       ))}
       <Text style={styles.sectionTitle}>Steps</Text>
-      {mockRecipe.steps.map((step, idx) => (
+      {recipe.steps.map((step, idx) => (
         <Text key={idx}>
           {idx + 1}. {step}
         </Text>
@@ -92,16 +122,22 @@ export default function RecipeDetail() {
         <Text style={styles.cookBtnText}>Start Cooking</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.push(`/recipe/edit/${mockRecipe.id}`)}
+        onPress={() => router.push(`/recipe/edit/${recipe.$id}`)}
         style={styles.editBtn}
       >
         <Text style={styles.editBtnText}>Edit Recipe</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.cookBtn}
-        onPress={() => router.push(`/recipe/cooking-mode/${mockRecipe.id}`)}
+        onPress={() => router.push(`/recipe/cooking-mode/${recipe.$id}`)}
       >
         <Text style={styles.cookBtnText}>Cooking Mode</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.editBtn, { backgroundColor: "#888" }]}
+        onPress={handleDelete}
+      >
+        <Text style={styles.editBtnText}>Delete Recipe</Text>
       </TouchableOpacity>
 
       {/* Ratings & Feedback Section */}

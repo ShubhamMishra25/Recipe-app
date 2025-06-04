@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextInput,
   StyleSheet,
@@ -7,35 +7,57 @@ import {
   Text,
   Image,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import recipeService from "@/services/recipeService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-// Mock existing recipe data
-const mockRecipe = {
-  id: "1",
-  title: "Spaghetti Carbonara",
-  description: "Classic Italian pasta with creamy sauce.",
-  image: require("@/assets/images/spaghetti.jpg"),
-  ingredients: ["Spaghetti", "Eggs", "Pancetta", "Parmesan", "Black Pepper"],
-  steps: [
-    "Boil pasta until al dente.",
-    "Fry pancetta until crispy.",
-    "Mix eggs and cheese.",
-    "Combine all and season.",
-  ],
-};
+const difficulties = ["Easy", "Medium", "Hard"];
+const categories = ["Breakfast", "Lunch", "Dinner", "Dessert"];
 
 export default function EditRecipe() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  // Pre-fill with existing recipe data
-  const [title, setTitle] = useState(mockRecipe.title);
-  const [desc, setDesc] = useState(mockRecipe.description);
-  const [ingredients, setIngredients] = useState<string[]>(mockRecipe.ingredients);
-  const [steps, setSteps] = useState<string[]>(mockRecipe.steps);
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [ingredients, setIngredients] = useState<string[]>([""]);
+  const [steps, setSteps] = useState<string[]>([""]);
   const [image, setImage] = useState<string | null>(null);
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [cookingTime, setCookingTime] = useState("");
+  const [servings, setServings] = useState("");
+  const [difficulty, setDifficulty] = useState(difficulties[0]);
+  const [category, setCategory] = useState(categories[0]);
+
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      setLoading(true);
+      const res = await recipeService.getRecipeById(id);
+      if (res.data) {
+        setRecipe(res.data);
+        setTitle(res.data.title || "");
+        setDesc(res.data.description || "");
+        setIngredients(res.data.ingredients || [""]);
+        setSteps(res.data.steps || [""]);
+        setCookingTime(
+          res.data.cookingTime !== undefined ? String(res.data.cookingTime) : ""
+        );
+        setServings(
+          res.data.servings !== undefined ? String(res.data.servings) : ""
+        );
+        setDifficulty(res.data.difficulty || difficulties[0]);
+        setCategory(res.data.category || categories[0]);
+        setImage(null); // Only set if user picks a new image
+      }
+      setLoading(false);
+    };
+    fetchRecipe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const addIngredient = () => setIngredients([...ingredients, ""]);
   const addStep = () => setSteps([...steps, ""]);
@@ -53,22 +75,71 @@ export default function EditRecipe() {
     }
   };
 
-  const handleSave = () => {
-    // TODO: Save edited recipe (Appwrite integration)
-    router.back();
+  const handleSave = async () => {
+    if (!recipe) return;
+    let imageFile = null;
+    if (image) {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      imageFile = new File([blob], "recipe.jpg", { type: blob.type });
+    }
+    const data = {
+      title,
+      description: desc,
+      ingredients,
+      steps,
+      cookingTime: parseInt(cookingTime, 10),
+      servings: parseInt(servings, 10),
+      difficulty,
+      category,
+      updatedAt: new Date().toISOString(),
+      imageId: recipe.imageId,
+    };
+    const result = await recipeService.updateRecipe(
+      recipe.$id,
+      data,
+      imageFile
+    );
+    if (!result.error) {
+      router.back();
+    } else {
+      alert("Failed to update recipe: " + result.error);
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: "#FFF5E6",
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF5E6" }}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
           ✏️ Edit Recipe
         </Text>
         <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
           {image ? (
             <Image source={{ uri: image }} style={styles.recipeImage} />
+          ) : recipe?.imageId ? (
+            <Image
+              source={{ uri: recipeService.getRecipeImageUrl(recipe.imageId) }}
+              style={styles.recipeImage}
+            />
           ) : (
-            <Image source={mockRecipe.image} style={styles.recipeImage} />
+            <Text style={styles.imagePickerText}>+ Add Photo</Text>
           )}
         </TouchableOpacity>
         <TextInput
@@ -118,6 +189,54 @@ export default function EditRecipe() {
         <TouchableOpacity style={styles.addBtn} onPress={addStep}>
           <Text style={styles.addBtnText}>+ Add Step</Text>
         </TouchableOpacity>
+        <TextInput
+          style={styles.input}
+          placeholder="Cooking Time (minutes)"
+          value={cookingTime}
+          onChangeText={setCookingTime}
+          keyboardType="numeric"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Servings"
+          value={servings}
+          onChangeText={setServings}
+          keyboardType="numeric"
+        />
+        <Text style={styles.sectionTitle}>Difficulty</Text>
+        {difficulties.map((d) => (
+          <TouchableOpacity
+            key={d}
+            style={[
+              styles.addBtn,
+              difficulty === d && { backgroundColor: "#FF6B6B" },
+            ]}
+            onPress={() => setDifficulty(d)}
+          >
+            <Text
+              style={[styles.addBtnText, difficulty === d && { color: "#fff" }]}
+            >
+              {d}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <Text style={styles.sectionTitle}>Category</Text>
+        {categories.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            style={[
+              styles.addBtn,
+              category === cat && { backgroundColor: "#FF6B6B" },
+            ]}
+            onPress={() => setCategory(cat)}
+          >
+            <Text
+              style={[styles.addBtnText, category === cat && { color: "#fff" }]}
+            >
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveBtnText}>Save Changes</Text>
         </TouchableOpacity>
@@ -143,6 +262,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eee",
     overflow: "hidden",
+  },
+  imagePickerText: {
+    color: "#0a7ea4",
+    fontWeight: "bold",
+    fontSize: 18,
   },
   recipeImage: {
     width: "100%",
