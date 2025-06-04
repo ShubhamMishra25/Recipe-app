@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,18 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function WelcomeScreen() {
+  const { user, loading } = useAuth();
   const router = useRouter();
+
+  // Redirect to /home if user is already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      router.replace("/home");
+    }
+  }, [user, loading]);
 
   return (
     <SafeAreaView style={styles.container}>

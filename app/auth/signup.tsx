@@ -11,17 +11,40 @@ import {
   ScrollView,
   SafeAreaView,
   Text,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignupScreen() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const { register, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // TODO: Add Appwrite signup logic here later
+  const handleSignup = async () => {
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+      Alert.alert("Missing Fields", "Please fill in all fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Password Mismatch", "Passwords do not match.");
+      return;
+    }
+
+    setSubmitting(true);
+    const response = await register(email, password);
+    setSubmitting(false);
+
+    if (response?.error) {
+      Alert.alert("Signup Failed", response.error);
+    } else {
+      router.replace("/profile-setup");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,13 +64,6 @@ export default function SignupScreen() {
             <Text style={styles.subtitle}>Join our culinary community</Text>
           </View>
           <View style={styles.formContainer}>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Full Name"
-              placeholderTextColor="#888"
-            />
             <TextInput
               style={styles.input}
               value={email}
@@ -73,8 +89,16 @@ export default function SignupScreen() {
               secureTextEntry
               placeholderTextColor="#888"
             />
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Sign Up</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSignup}
+              disabled={submitting || loading}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign Up</Text>
+              )}
             </TouchableOpacity>
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>

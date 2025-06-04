@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 const mockRecipes = [
   {
@@ -38,6 +39,7 @@ const categories = ["All", "Breakfast", "Lunch", "Dinner", "Dessert"];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 

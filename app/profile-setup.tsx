@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,29 +8,41 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import userService from "@/services/userService";
 
-const mockUser = {
-  name: "Shubham Mishra",
-  email: "shubham@example.com",
-  avatar: require("@/assets/images/avatar.png"),
-  preferences: ["Vegetarian", "Low Carb"],
-};
+const allPrefs = ["Vegetarian", "Vegan", "Low Carb", "Gluten Free", "Keto"];
 
-export default function EditProfilePage() {
+export default function ProfileSetup() {
   const router = useRouter();
-  const [name, setName] = useState(mockUser.name);
-  const [email, setEmail] = useState(mockUser.email);
+  const { user, loading } = useAuth();
+  const [name, setName] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
-  const [preferences, setPreferences] = useState<string[]>(
-    mockUser.preferences
-  );
+  const [preferences, setPreferences] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if(!loading && !user) {
+      router.replace("/auth/login");
+    }
+  }, [user, loading]);
+
+  if (loading || !user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </SafeAreaView>
+    );
+  }
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -40,41 +52,70 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleSave = () => {
-    // TODO: Save profile changes (Appwrite integration)
-    router.back();
-  };
   const togglePreference = (pref: string) => {
     setPreferences((prev) =>
       prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
     );
   };
 
-  const allPrefs = ["Vegetarian", "Vegan", "Low Carb", "Gluten Free", "Keto"];
+  const handleSave = async () => {
+    if (!name.trim()) {
+      Alert.alert("Missing Name", "Please enter your name.");
+      return;
+    }
+    setSubmitting(true);
+
+    const existing = await userService.getUserByAuthId(user.$id);
+    if (existing && existing.error) {
+      setSubmitting(false);
+      router.replace("/home");
+      return;
+    }
+
+    // TODO: Upload avatar to Appwrite Storage and get avatarId
+    // For now, just save the avatar URI as a placeholder
+
+    const data = {
+      name,
+      preferences,
+      avatarId: avatar || null,
+      authUserId: user.$id,
+      email: user.email,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const response = await userService.createUserProfile(data);
+
+    setSubmitting(false);
+
+    if (!response?.error) {
+      router.replace("/home");
+    } else {
+      Alert.alert("Error", response.error || "Failed to save profile.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
+        <Text style={styles.title}>Set Up Your Profile</Text>
         <TouchableOpacity onPress={pickAvatar}>
           <Image
-            source={avatar ? { uri: avatar } : mockUser.avatar}
+            source={
+              avatar
+                ? { uri: avatar }
+                : require("@/assets/images/avatar.png")
+            }
             style={styles.avatar}
           />
-          <Text style={styles.avatarEdit}>Change Avatar</Text>
+          <Text style={styles.avatarEdit}>Add Avatar</Text>
         </TouchableOpacity>
         <TextInput
           style={styles.input}
           placeholder="Full Name"
           value={name}
           onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
         />
         <Text style={styles.sectionTitle}>Dietary Preferences</Text>
         <View style={styles.prefRow}>
@@ -98,8 +139,16 @@ export default function EditProfilePage() {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Save Changes</Text>
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={handleSave}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveBtnText}>Save Profile</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -112,6 +161,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
     paddingTop: 48,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#0a7ea4",
+    marginBottom: 24,
   },
   avatar: {
     width: 110,

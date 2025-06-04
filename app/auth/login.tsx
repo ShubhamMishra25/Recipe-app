@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -11,13 +11,34 @@ import {
   ScrollView,
   SafeAreaView,
   Text,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const { login, loading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Missing Fields", "Please enter both email and password.");
+      return;
+    }
+    setSubmitting(true);
+    const response = await login(email, password);
+    setSubmitting(false);
+
+    if (response?.error) {
+      Alert.alert("Login Failed", response.error);
+    } else {
+      router.replace("/home");
+    }
+  };
 
   //TODO: Add Appwrite login logic here later
   return (
@@ -55,8 +76,16 @@ export default function LoginScreen() {
             secureTextEntry
             placeholderTextColor="#888"
           />
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Login</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={submitting || loading}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Login</Text>
+            )}
           </TouchableOpacity>
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don&apos;t have an account? </Text>
