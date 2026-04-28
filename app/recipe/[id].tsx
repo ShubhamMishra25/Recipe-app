@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
+import recipeService from "@/services/recipeService";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-  View,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Text,
-  TextInput,
-  FlatList,
   ActivityIndicator,
   Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import recipeService from "@/services/recipeService";
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams();
@@ -73,7 +72,7 @@ export default function RecipeDetail() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -84,7 +83,6 @@ export default function RecipeDetail() {
       </View>
     );
   }
-
 
   return (
     <ScrollView style={styles.container}>
@@ -172,23 +170,26 @@ export default function RecipeDetail() {
           <Text style={styles.addCommentBtnText}>Submit</Text>
         </TouchableOpacity>
         <Text style={styles.sectionTitle}>Feedback</Text>
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.commentCard}>
-              <Text style={styles.commentUser}>
-                {item.user}{" "}
-                <Text style={styles.commentStars}>
-                  {"★".repeat(item.rating)}
-                  {"☆".repeat(5 - item.rating)}
+        <View style={{ paddingBottom: 24 }}>
+          {comments.length === 0 ? (
+            <Text style={styles.emptyCommentsText}>
+              No feedback yet. Be the first to comment.
+            </Text>
+          ) : (
+            comments.map((item) => (
+              <View key={item.id} style={styles.commentCard}>
+                <Text style={styles.commentUser}>
+                  {item.user}{" "}
+                  <Text style={styles.commentStars}>
+                    {"★".repeat(item.rating)}
+                    {"☆".repeat(5 - item.rating)}
+                  </Text>
                 </Text>
-              </Text>
-              <Text style={styles.commentText}>{item.text}</Text>
-            </View>
+                <Text style={styles.commentText}>{item.text}</Text>
+              </View>
+            ))
           )}
-          contentContainerStyle={{ paddingBottom: 24 }}
-        />
+        </View>
       </View>
     </ScrollView>
   );
@@ -275,6 +276,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
+  },
+  emptyCommentsText: {
+    color: "#666",
+    fontStyle: "italic",
   },
   commentUser: { fontWeight: "bold", color: "#0a7ea4" },
   commentStars: { color: "#FFB300", fontSize: 14 },
