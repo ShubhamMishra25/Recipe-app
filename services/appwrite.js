@@ -1,4 +1,4 @@
-import {Client, Databases, Account, Storage } from 'react-native-appwrite';
+import { Account, Client, Databases, Storage } from "react-native-appwrite";
 
 const config = {
   endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
@@ -9,6 +9,13 @@ const config = {
     recipes: process.env.EXPO_PUBLIC_APPWRITE_COL_RECIPES_ID,
     comments: process.env.EXPO_PUBLIC_APPWRITE_COL_COMMENTS_ID,
     savedRecipes: process.env.EXPO_PUBLIC_APPWRITE_COL_SAVED_RECIPES_ID,
+    mealPlans:
+      process.env.EXPO_PUBLIC_APPWRITE_COL_MEAL_PLANS_ID || "meal_plans",
+    mealPlanItems:
+      process.env.EXPO_PUBLIC_APPWRITE_COL_MEAL_PLAN_ITEMS_ID ||
+      "meal_plan_items",
+    pantryItems:
+      process.env.EXPO_PUBLIC_APPWRITE_COL_PANTRY_ITEMS_ID || "pantry_items",
   },
   bucket: {
     avatars: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_AVATARS_ID,
@@ -17,8 +24,8 @@ const config = {
 };
 
 const client = new Client()
-    .setEndpoint(config.endpoint)
-    .setProject(config.projectId);
+  .setEndpoint(config.endpoint)
+  .setProject(config.projectId);
 
 client.setPlatform(process.env.EXPO_PUBLIC_APPWRITE_PACKAGE_NAME);
 
@@ -28,4 +35,5 @@ const storage = new Storage(client);
 
 const account = new Account(client);
 
-export { databases, account, config, client, storage };
+export { account, client, config, databases, storage };
+

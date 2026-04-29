@@ -1,5 +1,5 @@
-import { account } from './appwrite';
-import { ID } from 'react-native-appwrite';
+import { account } from "./appwrite";
+import { ID } from "react-native-appwrite";
 
 const authService = {
   // Register a user
@@ -9,7 +9,7 @@ const authService = {
       return response;
     } catch (error) {
       return {
-        error: error.message || 'Registration failed. Please try agian',
+        error: error.message || "Registration failed. Please try agian",
       };
     }
   },
@@ -18,12 +18,12 @@ const authService = {
     try {
       const response = await account.createEmailPasswordSession(
         email,
-        password
+        password,
       );
       return response;
     } catch (error) {
       return {
-        error: error.message || 'Login failed. Please check your credentials',
+        error: error.message || "Login failed. Please check your credentials",
       };
     }
   },
@@ -32,17 +32,19 @@ const authService = {
     try {
       return await account.get();
     } catch (error) {
-      return null;
+      return {
+        error: error.message || "Failed to fetch user data. Please try again",
+      };
     }
   },
 
   // Logout user
   async logout() {
     try {
-      await account.deleteSession('current');
+      await account.deleteSession("current");
     } catch (error) {
       return {
-        error: error.message || 'Logout failed. Please try again',
+        error: error.message || "Logout failed. Please try again",
       };
     }
   },

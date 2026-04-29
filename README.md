@@ -87,3 +87,36 @@ The app uses Appwrite for:
 - Database: Recipe storage, user profiles, saved recipes
 - Storage: Recipe images
 - Realtime: Live feed updates
+
+## Appwrite Bootstrap
+
+The Meal Planner feature uses a small Node script to create its Appwrite schema in code.
+
+Required environment variables:
+
+- `EXPO_PUBLIC_APPWRITE_ENDPOINT`
+- `EXPO_PUBLIC_APPWRITE_PROJECT_ID`
+- `EXPO_PUBLIC_APPWRITE_DB_ID`
+- `APPWRITE_API_KEY`
+
+Optional collection IDs:
+
+- `EXPO_PUBLIC_APPWRITE_COL_MEAL_PLANS_ID`
+- `EXPO_PUBLIC_APPWRITE_COL_MEAL_PLAN_ITEMS_ID`
+- `EXPO_PUBLIC_APPWRITE_COL_PANTRY_ITEMS_ID`
+
+Run the bootstrap script:
+
+```bash
+npm run setup:appwrite
+```
+
+If you do not provide the optional collection IDs, the app uses these defaults:
+
+- `meal_plans`
+- `meal_plan_items`
+- `pantry_items`
+
+Revise
+- What are indexes and how do they work in Appwrite?
+- What are appwrite functions and how do they work?

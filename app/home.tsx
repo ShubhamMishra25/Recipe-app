@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  Text,
-  TextInput,
-  ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import recipeService from "@/services/recipeService";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const categories = ["All", "Breakfast", "Lunch", "Dinner", "Dessert"];
 
@@ -35,7 +35,6 @@ export default function HomeScreen() {
     fetchRecipes();
   }, []);
 
-
   const filteredRecipes = recipes.filter((recipe) => {
     const matchesSearch =
       recipe.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,7 +54,23 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🍽️ Discover Recipes</Text>
+      <View style={styles.topBar}>
+        <Text style={styles.header}>🍽️ Discover Recipes</Text>
+        <View style={styles.topBarBtns}>
+          <TouchableOpacity
+            style={styles.topBarBtn}
+            onPress={() => router.push("/meal-planner")}
+          >
+            <Text style={styles.topBarBtnText}>📅 Plan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.topBarBtn}
+            onPress={() => router.push("/pantry")}
+          >
+            <Text style={styles.topBarBtnText}>🗄️ Pantry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <TextInput
         style={styles.searchInput}
         placeholder="Search recipes..."
@@ -127,12 +142,31 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 34,
   },
-  header: {
+  topBar: {
     marginBottom: 16,
+  },
+  header: {
     textAlign: "center",
     fontSize: 24,
     fontWeight: "bold",
     color: "#0a7ea4",
+    marginBottom: 12,
+  },
+  topBarBtns: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+  },
+  topBarBtn: {
+    backgroundColor: "#0a7ea4",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  topBarBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 13,
   },
   searchInput: {
     backgroundColor: "#fff",
