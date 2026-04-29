@@ -1,6 +1,8 @@
 import recipeService from "@/services/recipeService";
+import mealPlanService from "@/services/mealPlanService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ActivityIndicator,
   Alert,
@@ -11,14 +13,22 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
+  FlatList,
 } from "react-native";
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mealPlans, setMealPlans] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedDay, setSelectedDay] = useState("mon");
+  const [selectedMeal, setSelectedMeal] = useState("lunch");
 
   // Ratings & feedback state
   const [userRating, setUserRating] = useState(0);
@@ -36,6 +46,45 @@ export default function RecipeDetail() {
     // Optionally, fetch comments from Appwrite here when implementing comments collection
     setComments([]); // Clear or fetch comments
   }, [id]);
+
+  useEffect(() => {
+    loadMealPlans();
+  }, []);
+
+  const loadMealPlans = async () => {
+    if (!user) return;
+    try {
+      const { data } = await mealPlanService.listPlans(user.$id);
+      setMealPlans(data || []);
+      if (data && data.length > 0) {
+        setSelectedPlan(data[0].$id);
+      }
+    } catch (error) {
+      console.error("Failed to load meal plans");
+    }
+  };
+
+  const handleAddToPlan = async () => {
+    if (!user || !recipe || !selectedPlan) {
+      Alert.alert("Error", "Missing required information");
+      return;
+    }
+
+    try {
+      await mealPlanService.addSlot({
+        mealPlanId: selectedPlan,
+        ownerAuthId: user.$id,
+        dayKey: selectedDay,
+        mealType: selectedMeal,
+        recipeId: recipe.$id,
+        servings: recipe.servings || 1,
+      });
+      Alert.alert("Success", "Recipe added to meal plan!");
+      setModalVisible(false);
+    } catch (error) {
+      Alert.alert("Error", "Failed to add recipe to meal plan");
+    }
+  };
 
   const handleAddComment = () => {
     if (userComment.trim() && userRating > 0) {
@@ -132,6 +181,12 @@ export default function RecipeDetail() {
         <Text style={styles.cookBtnText}>Cooking Mode</Text>
       </TouchableOpacity>
       <TouchableOpacity
+        style={[styles.cookBtn, { backgroundColor: "#0ac500" }]}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.cookBtnText}>📅 Add to Meal Plan</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
         style={[styles.editBtn, { backgroundColor: "#888" }]}
         onPress={handleDelete}
       >
@@ -192,6 +247,141 @@ export default function RecipeDetail() {
         </View>
       </View>
     </ScrollView>
+
+    <Modal
+      visible={modalVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add to Meal Plan</Text>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeBtn}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {mealPlans.length === 0 ? (
+            <View style={styles.noPlanText}>
+              <Text style={styles.noPlanMessage}>
+                No meal plans yet. Create one first!
+              </Text>
+              <TouchableOpacity
+                style={styles.createPlanBtn}
+                onPress={() => {
+                  router.push("/meal-planner");
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={styles.createPlanBtnText}>Go to Meal Planner</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Select Meal Plan</Text>
+                <View style={styles.pickerContainer}>
+                  {mealPlans.map((plan) => (
+                    <TouchableOpacity
+                      key={plan.$id}
+                      style={[
+                        styles.pickerOption,
+                        selectedPlan === plan.$id && styles.pickerOptionSelected,
+                      ]}
+                      onPress={() => setSelectedPlan(plan.$id)}
+                    >
+                      <Text
+                        style={[
+                          styles.pickerOptionText,
+                          selectedPlan === plan.$id &&
+                            styles.pickerOptionTextSelected,
+                        ]}
+                      >
+                        {plan.title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formRow}>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Day</Text>
+                  <View style={styles.pickerContainer}>
+                    {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+                      (day) => (
+                        <TouchableOpacity
+                          key={day}
+                          style={[
+                            styles.pickerOption,
+                            selectedDay === day && styles.pickerOptionSelected,
+                          ]}
+                          onPress={() => setSelectedDay(day)}
+                        >
+                          <Text
+                            style={[
+                              styles.pickerOptionText,
+                              selectedDay === day &&
+                                styles.pickerOptionTextSelected,
+                            ]}
+                          >
+                            {day.slice(0, 3).toUpperCase()}
+                          </Text>
+                        </TouchableOpacity>
+                      ),
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Meal Type</Text>
+                  <View style={styles.pickerContainer}>
+                    {["breakfast", "lunch", "dinner"].map((meal) => (
+                      <TouchableOpacity
+                        key={meal}
+                        style={[
+                          styles.pickerOption,
+                          selectedMeal === meal &&
+                            styles.pickerOptionSelected,
+                        ]}
+                        onPress={() => setSelectedMeal(meal)}
+                      >
+                        <Text
+                          style={[
+                            styles.pickerOptionText,
+                            selectedMeal === meal &&
+                              styles.pickerOptionTextSelected,
+                          ]}
+                        >
+                          {meal.slice(0, 3)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={handleAddToPlan}
+                >
+                  <Text style={styles.addBtnText}>Add to Plan</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -284,4 +474,117 @@ const styles = StyleSheet.create({
   commentUser: { fontWeight: "bold", color: "#0a7ea4" },
   commentStars: { color: "#FFB300", fontSize: 14 },
   commentText: { color: "#333", marginTop: 2 },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: "80%",
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#11181C",
+  },
+  closeBtn: {
+    fontSize: 24,
+    color: "#666",
+  },
+  noPlanText: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  noPlanMessage: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 12,
+  },
+  createPlanBtn: {
+    backgroundColor: "#0a7ea4",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  createPlanBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  pickerOption: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  pickerOptionSelected: {
+    backgroundColor: "#0a7ea4",
+    borderColor: "#0a7ea4",
+  },
+  pickerOptionText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  pickerOptionTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
+  },
+  cancelBtn: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelBtnText: {
+    fontWeight: "600",
+    color: "#666",
+  },
+  addBtn: {
+    flex: 1,
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  addBtnText: {
+    fontWeight: "600",
+    color: "#fff",
+  },
 });

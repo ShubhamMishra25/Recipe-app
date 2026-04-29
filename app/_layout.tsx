@@ -33,6 +33,9 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
+          <Stack.Screen name="meal-planner" options={{ title: "Meal Planner" }} />
+          <Stack.Screen name="pantry" options={{ title: "Pantry" }} />
+          <Stack.Screen name="grocery-list" options={{ title: "Grocery List" }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
