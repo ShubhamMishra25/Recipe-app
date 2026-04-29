@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import userService from "@/services/userService";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 const allPrefs = ["Vegetarian", "Vegan", "Low Carb", "Gluten Free", "Keto"];
 
@@ -27,7 +28,7 @@ export default function ProfileSetup() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if(!loading && !user) {
+    if (!loading && !user) {
       router.replace("/auth/login");
     }
   }, [user, loading]);
@@ -54,7 +55,7 @@ export default function ProfileSetup() {
 
   const togglePreference = (pref: string) => {
     setPreferences((prev) =>
-      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
+      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref],
     );
   };
 
@@ -103,9 +104,7 @@ export default function ProfileSetup() {
         <TouchableOpacity onPress={pickAvatar}>
           <Image
             source={
-              avatar
-                ? { uri: avatar }
-                : require("@/assets/images/avatar.png")
+              avatar ? { uri: avatar } : require("@/assets/images/avatar.png")
             }
             style={styles.avatar}
           />
@@ -156,81 +155,103 @@ export default function ProfileSetup() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF5E6" },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.light.backgroundAlt,
+  },
   inner: {
     alignItems: "center",
-    padding: 24,
+    paddingHorizontal: 24,
     paddingTop: 48,
+    paddingBottom: 24,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#0a7ea4",
-    marginBottom: 24,
+    fontSize: 28,
+    fontWeight: "900",
+    color: Colors.light.text,
+    marginBottom: 28,
+    letterSpacing: -0.5,
   },
   avatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    marginBottom: 8,
-    backgroundColor: "#eee",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    marginBottom: 12,
+    backgroundColor: Colors.light.border,
+    borderWidth: 3,
+    borderColor: Colors.light.primary,
   },
   avatarEdit: {
-    color: "#0a7ea4",
+    color: Colors.light.primary,
     textAlign: "center",
-    marginBottom: 18,
-    fontWeight: "bold",
+    marginBottom: 20,
+    fontWeight: "800",
+    fontSize: 14,
   },
   input: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: Colors.light.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     marginBottom: 16,
-    fontSize: 16,
-    width: 260,
-    borderWidth: 1,
-    borderColor: "#eee",
+    fontSize: 15,
+    width: 280,
+    borderWidth: 1.5,
+    borderColor: Colors.light.border,
+    color: Colors.light.text,
   },
   sectionTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    marginTop: 12,
-    marginBottom: 8,
-    color: "#0a7ea4",
+    fontWeight: "800",
+    fontSize: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    color: Colors.light.text,
     alignSelf: "flex-start",
+    letterSpacing: 0.2,
   },
   prefRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 24,
+    gap: 10,
+    marginBottom: 28,
   },
   prefBtn: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.light.white,
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    margin: 2,
-    borderWidth: 1,
-    borderColor: "#0a7ea4",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    margin: 3,
+    borderWidth: 1.5,
+    borderColor: Colors.light.primary,
   },
   prefBtnActive: {
-    backgroundColor: "#0a7ea4",
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
   },
   prefBtnText: {
-    color: "#0a7ea4",
-    fontSize: 14,
+    color: Colors.light.primary,
+    fontSize: 13,
+    fontWeight: "700",
   },
   prefBtnTextActive: {
-    color: "#fff",
+    color: Colors.light.white,
   },
   saveBtn: {
-    backgroundColor: "#FF6B6B",
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     alignItems: "center",
-    marginTop: 24,
-    width: 220,
+    marginTop: 28,
+    width: 240,
+    shadowColor: Colors.light.secondary,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  saveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  saveBtnText: {
+    color: Colors.light.white,
+    fontWeight: "800",
+    fontSize: 16,
+  },
 });

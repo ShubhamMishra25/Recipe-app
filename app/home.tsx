@@ -70,6 +70,20 @@ export default function HomeScreen() {
             <Text style={styles.topBarBtnText}>🗄️ Pantry</Text>
           </TouchableOpacity>
         </View>
+        <View style={[styles.topBarBtns, { marginTop: 8 }]}>
+          <TouchableOpacity
+            style={styles.topBarBtn}
+            onPress={() => router.push("/saved")}
+          >
+            <Text style={styles.topBarBtnText}>💾 Saved</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.topBarBtn}
+            onPress={() => router.push("/profile")}
+          >
+            <Text style={styles.topBarBtnText}>👤 Profile</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <TextInput
         style={styles.searchInput}

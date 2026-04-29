@@ -1,20 +1,19 @@
-import recipeService from "@/services/recipeService";
+import { useAuth } from "@/contexts/AuthContext";
 import mealPlanService from "@/services/mealPlanService";
+import recipeService from "@/services/recipeService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  FlatList,
 } from "react-native";
 
 export default function RecipeDetail() {
@@ -22,23 +21,23 @@ export default function RecipeDetail() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [recipe, setRecipe] = useState(null);
+  const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [mealPlans, setMealPlans] = useState([]);
+  const [mealPlans, setMealPlans] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState("mon");
   const [selectedMeal, setSelectedMeal] = useState("lunch");
 
   // Ratings & feedback state
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState("");
-  const [comments, setComments] = useState([]);
+  const [comments, setComments] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       setLoading(true);
-      const { data, error } = await recipeService.getRecipeById(id);
+      const { data } = await recipeService.getRecipeById(id);
       if (data) setRecipe(data);
       setLoading(false);
     };
@@ -49,7 +48,8 @@ export default function RecipeDetail() {
 
   useEffect(() => {
     loadMealPlans();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const loadMealPlans = async () => {
     if (!user) return;
@@ -59,7 +59,7 @@ export default function RecipeDetail() {
       if (data && data.length > 0) {
         setSelectedPlan(data[0].$id);
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Failed to load meal plans");
     }
   };
@@ -81,7 +81,7 @@ export default function RecipeDetail() {
       });
       Alert.alert("Success", "Recipe added to meal plan!");
       setModalVisible(false);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to add recipe to meal plan");
     }
   };
@@ -134,259 +134,275 @@ export default function RecipeDetail() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Image
-        source={
-          recipe.imageId
-            ? { uri: recipeService.getRecipeImageUrl(recipe.imageId) }
-            : require("@/assets/images/spaghetti.jpg")
-        }
-        style={styles.image}
-      />
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>{recipe.title}</Text>
-        <TouchableOpacity style={styles.saveBtn}>
-          <Text style={styles.saveBtnText}>♡</Text>
+    <>
+      <ScrollView style={styles.container}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backBtnText}>← Back</Text>
         </TouchableOpacity>
-      </View>
-      <Text style={styles.desc}>{recipe.description}</Text>
-      <View style={styles.infoRow}>
-        <Text>⏱ {recipe.time}</Text>
-        <Text>🍽 {recipe.servings} servings</Text>
-        <Text>⭐ {recipe.difficulty}</Text>
-      </View>
-      <Text style={styles.sectionTitle}>Ingredients</Text>
-      {recipe.ingredients.map((item, idx) => (
-        <Text key={idx}>• {item}</Text>
-      ))}
-      <Text style={styles.sectionTitle}>Steps</Text>
-      {recipe.steps.map((step, idx) => (
-        <Text key={idx}>
-          {idx + 1}. {step}
-        </Text>
-      ))}
-      <TouchableOpacity style={styles.cookBtn}>
-        <Text style={styles.cookBtnText}>Start Cooking</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => router.push(`/recipe/edit/${recipe.$id}`)}
-        style={styles.editBtn}
-      >
-        <Text style={styles.editBtnText}>Edit Recipe</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.cookBtn}
-        onPress={() => router.push(`/recipe/cooking-mode/${recipe.$id}`)}
-      >
-        <Text style={styles.cookBtnText}>Cooking Mode</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.cookBtn, { backgroundColor: "#0ac500" }]}
-        onPress={() => setModalVisible(true)}
-      >
-        <Text style={styles.cookBtnText}>📅 Add to Meal Plan</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.editBtn, { backgroundColor: "#888" }]}
-        onPress={handleDelete}
-      >
-        <Text style={styles.editBtnText}>Delete Recipe</Text>
-      </TouchableOpacity>
-
-      {/* Ratings & Feedback Section */}
-      <View style={styles.feedbackSection}>
-        <Text style={styles.sectionTitle}>Rate & Comment</Text>
-        <View style={styles.starsRow}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity
-              key={star}
-              onPress={() => setUserRating(star)}
-              style={styles.starBtn}
-            >
-              <Text
-                style={[styles.star, userRating >= star && styles.starActive]}
-              >
-                ★
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <TextInput
-          style={styles.commentInput}
-          placeholder="Leave a comment..."
-          value={userComment}
-          onChangeText={setUserComment}
-          multiline
+        <Image
+          source={
+            recipe.imageId
+              ? { uri: recipeService.getRecipeImageUrl(recipe.imageId) }
+              : require("@/assets/images/spaghetti.jpg")
+          }
+          style={styles.image}
         />
-        <TouchableOpacity
-          style={styles.addCommentBtn}
-          onPress={handleAddComment}
-        >
-          <Text style={styles.addCommentBtnText}>Submit</Text>
-        </TouchableOpacity>
-        <Text style={styles.sectionTitle}>Feedback</Text>
-        <View style={{ paddingBottom: 24 }}>
-          {comments.length === 0 ? (
-            <Text style={styles.emptyCommentsText}>
-              No feedback yet. Be the first to comment.
-            </Text>
-          ) : (
-            comments.map((item) => (
-              <View key={item.id} style={styles.commentCard}>
-                <Text style={styles.commentUser}>
-                  {item.user}{" "}
-                  <Text style={styles.commentStars}>
-                    {"★".repeat(item.rating)}
-                    {"☆".repeat(5 - item.rating)}
-                  </Text>
-                </Text>
-                <Text style={styles.commentText}>{item.text}</Text>
-              </View>
-            ))
-          )}
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>{recipe.title}</Text>
+          <TouchableOpacity style={styles.saveBtn}>
+            <Text style={styles.saveBtnText}>♡</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+        <Text style={styles.desc}>{recipe.description}</Text>
+        <View style={styles.infoRow}>
+          <Text>⏱ {recipe.time}</Text>
+          <Text>🍽 {recipe.servings} servings</Text>
+          <Text>⭐ {recipe.difficulty}</Text>
+        </View>
+        <Text style={styles.sectionTitle}>Ingredients</Text>
+        {recipe.ingredients.map((item: any, idx: number) => (
+          <Text key={idx}>• {item}</Text>
+        ))}
+        <Text style={styles.sectionTitle}>Steps</Text>
+        {recipe.steps.map((step: any, idx: number) => (
+          <Text key={idx}>
+            {idx + 1}. {step}
+          </Text>
+        ))}
+        <TouchableOpacity
+          style={styles.cookBtn}
+          onPress={() => router.push(`/recipe/cooking-mode/${recipe.$id}`)}
+        >
+          <Text style={styles.cookBtnText}>Start Cooking</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push(`/recipe/edit/${recipe.$id}`)}
+          style={styles.editBtn}
+        >
+          <Text style={styles.editBtnText}>Edit Recipe</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.cookBtn, { backgroundColor: "#0ac500" }]}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.cookBtnText}>📅 Add to Meal Plan</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.editBtn, { backgroundColor: "#888" }]}
+          onPress={handleDelete}
+        >
+          <Text style={styles.editBtnText}>Delete Recipe</Text>
+        </TouchableOpacity>
 
-    <Modal
-      visible={modalVisible}
-      transparent
-      animationType="slide"
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add to Meal Plan</Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeBtn}>✕</Text>
-            </TouchableOpacity>
-          </View>
-
-          {mealPlans.length === 0 ? (
-            <View style={styles.noPlanText}>
-              <Text style={styles.noPlanMessage}>
-                No meal plans yet. Create one first!
-              </Text>
+        {/* Ratings & Feedback Section */}
+        <View style={styles.feedbackSection}>
+          <Text style={styles.sectionTitle}>Rate & Comment</Text>
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity
-                style={styles.createPlanBtn}
-                onPress={() => {
-                  router.push("/meal-planner");
-                  setModalVisible(false);
-                }}
+                key={star}
+                onPress={() => setUserRating(star)}
+                style={styles.starBtn}
               >
-                <Text style={styles.createPlanBtnText}>Go to Meal Planner</Text>
+                <Text
+                  style={[styles.star, userRating >= star && styles.starActive]}
+                >
+                  ★
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Leave a comment..."
+            value={userComment}
+            onChangeText={setUserComment}
+            multiline
+          />
+          <TouchableOpacity
+            style={styles.addCommentBtn}
+            onPress={handleAddComment}
+          >
+            <Text style={styles.addCommentBtnText}>Submit</Text>
+          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Feedback</Text>
+          <View style={{ paddingBottom: 24 }}>
+            {comments.length === 0 ? (
+              <Text style={styles.emptyCommentsText}>
+                No feedback yet. Be the first to comment.
+              </Text>
+            ) : (
+              comments.map((item) => (
+                <View key={item.id} style={styles.commentCard}>
+                  <Text style={styles.commentUser}>
+                    {item.user}{" "}
+                    <Text style={styles.commentStars}>
+                      {"★".repeat(item.rating)}
+                      {"☆".repeat(5 - item.rating)}
+                    </Text>
+                  </Text>
+                  <Text style={styles.commentText}>{item.text}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add to Meal Plan</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeBtn}>✕</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Select Meal Plan</Text>
-                <View style={styles.pickerContainer}>
-                  {mealPlans.map((plan) => (
-                    <TouchableOpacity
-                      key={plan.$id}
-                      style={[
-                        styles.pickerOption,
-                        selectedPlan === plan.$id && styles.pickerOptionSelected,
-                      ]}
-                      onPress={() => setSelectedPlan(plan.$id)}
-                    >
-                      <Text
-                        style={[
-                          styles.pickerOptionText,
-                          selectedPlan === plan.$id &&
-                            styles.pickerOptionTextSelected,
-                        ]}
-                      >
-                        {plan.title}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+
+            {mealPlans.length === 0 ? (
+              <View style={styles.noPlanText}>
+                <Text style={styles.noPlanMessage}>
+                  No meal plans yet. Create one first!
+                </Text>
+                <TouchableOpacity
+                  style={styles.createPlanBtn}
+                  onPress={() => {
+                    router.push("/meal-planner");
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.createPlanBtnText}>
+                    Go to Meal Planner
+                  </Text>
+                </TouchableOpacity>
               </View>
-
-              <View style={styles.formRow}>
+            ) : (
+              <>
                 <View style={styles.formGroup}>
-                  <Text style={styles.label}>Day</Text>
+                  <Text style={styles.label}>Select Meal Plan</Text>
                   <View style={styles.pickerContainer}>
-                    {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
-                      (day) => (
-                        <TouchableOpacity
-                          key={day}
-                          style={[
-                            styles.pickerOption,
-                            selectedDay === day && styles.pickerOptionSelected,
-                          ]}
-                          onPress={() => setSelectedDay(day)}
-                        >
-                          <Text
-                            style={[
-                              styles.pickerOptionText,
-                              selectedDay === day &&
-                                styles.pickerOptionTextSelected,
-                            ]}
-                          >
-                            {day.slice(0, 3).toUpperCase()}
-                          </Text>
-                        </TouchableOpacity>
-                      ),
-                    )}
-                  </View>
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Meal Type</Text>
-                  <View style={styles.pickerContainer}>
-                    {["breakfast", "lunch", "dinner"].map((meal) => (
+                    {mealPlans.map((plan) => (
                       <TouchableOpacity
-                        key={meal}
+                        key={plan.$id}
                         style={[
                           styles.pickerOption,
-                          selectedMeal === meal &&
+                          selectedPlan === plan.$id &&
                             styles.pickerOptionSelected,
                         ]}
-                        onPress={() => setSelectedMeal(meal)}
+                        onPress={() => setSelectedPlan(plan.$id)}
                       >
                         <Text
                           style={[
                             styles.pickerOptionText,
-                            selectedMeal === meal &&
+                            selectedPlan === plan.$id &&
                               styles.pickerOptionTextSelected,
                           ]}
                         >
-                          {meal.slice(0, 3)}
+                          {plan.title}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.addBtn}
-                  onPress={handleAddToPlan}
-                >
-                  <Text style={styles.addBtnText}>Add to Plan</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
+                <View style={styles.formRow}>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Day</Text>
+                    <View style={styles.pickerContainer}>
+                      {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map(
+                        (day) => (
+                          <TouchableOpacity
+                            key={day}
+                            style={[
+                              styles.pickerOption,
+                              selectedDay === day &&
+                                styles.pickerOptionSelected,
+                            ]}
+                            onPress={() => setSelectedDay(day)}
+                          >
+                            <Text
+                              style={[
+                                styles.pickerOptionText,
+                                selectedDay === day &&
+                                  styles.pickerOptionTextSelected,
+                              ]}
+                            >
+                              {day.slice(0, 3).toUpperCase()}
+                            </Text>
+                          </TouchableOpacity>
+                        ),
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Meal Type</Text>
+                    <View style={styles.pickerContainer}>
+                      {["breakfast", "lunch", "dinner"].map((meal) => (
+                        <TouchableOpacity
+                          key={meal}
+                          style={[
+                            styles.pickerOption,
+                            selectedMeal === meal &&
+                              styles.pickerOptionSelected,
+                          ]}
+                          onPress={() => setSelectedMeal(meal)}
+                        >
+                          <Text
+                            style={[
+                              styles.pickerOptionText,
+                              selectedMeal === meal &&
+                                styles.pickerOptionTextSelected,
+                            ]}
+                          >
+                            {meal.slice(0, 3)}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.cancelBtn}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text style={styles.cancelBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.addBtn}
+                    onPress={handleAddToPlan}
+                  >
+                    <Text style={styles.addBtnText}>Add to Plan</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF5E6", padding: 16 },
+  backBtn: {
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    elevation: 1,
+  },
+  backBtnText: { color: "#0a7ea4", fontWeight: "bold", fontSize: 16 },
   image: { width: "100%", height: 220, borderRadius: 16, marginBottom: 16 },
   headerRow: {
     flexDirection: "row",

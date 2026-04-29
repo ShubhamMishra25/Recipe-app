@@ -1,13 +1,13 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function WelcomeScreen() {
   const { user, loading } = useAuth();

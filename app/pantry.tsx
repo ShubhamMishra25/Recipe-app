@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import pantryService from "@/services/pantryService";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -15,7 +16,8 @@ import {
 
 export default function PantryScreen() {
   const { user } = useAuth();
-  const [pantryItems, setPantryItems] = useState([]);
+  const router = useRouter();
+  const [pantryItems, setPantryItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [itemName, setItemName] = useState("");
@@ -35,7 +37,7 @@ export default function PantryScreen() {
     try {
       const { data } = await pantryService.listItems(user.$id);
       setPantryItems(data || []);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to load pantry");
     }
     setLoading(false);
@@ -67,12 +69,12 @@ export default function PantryScreen() {
 
       await loadPantry();
       closeModal();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to save item");
     }
   }
 
-  async function deleteItem(id) {
+  async function deleteItem(id: string) {
     Alert.alert("Delete Item", "Remove this item from pantry?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -82,7 +84,7 @@ export default function PantryScreen() {
           try {
             await pantryService.deleteItem(id);
             await loadPantry();
-          } catch (error) {
+          } catch (_error) {
             Alert.alert("Error", "Failed to delete item");
           }
         },
@@ -90,7 +92,7 @@ export default function PantryScreen() {
     ]);
   }
 
-  function openModal(item = null) {
+  function openModal(item: any = null) {
     if (item) {
       setEditingId(item.$id);
       setItemName(item.name);
@@ -122,6 +124,9 @@ export default function PantryScreen() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <Text style={styles.backBtnText}>← Back</Text>
+      </TouchableOpacity>
       <View style={styles.header}>
         <Text style={styles.title}>🗄️ My Pantry</Text>
         <Text style={styles.subtitle}>{pantryItems.length} items</Text>
@@ -130,7 +135,7 @@ export default function PantryScreen() {
       <FlatList
         data={pantryItems}
         keyExtractor={(item) => item.$id}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: any }) => (
           <View style={styles.itemCard}>
             <TouchableOpacity
               style={styles.itemContent}
@@ -261,6 +266,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
+  backBtn: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    elevation: 1,
+  },
+  backBtnText: { color: "#0a7ea4", fontWeight: "bold", fontSize: 16 },
   title: {
     fontWeight: "bold",
     fontSize: 28,
@@ -273,7 +290,7 @@ const styles = StyleSheet.create({
   },
   itemCard: {
     marginHorizontal: 16,
-    marginBottomVertical: 8,
+    marginVertical: 8,
     backgroundColor: "#fff",
     borderRadius: 10,
     flexDirection: "row",

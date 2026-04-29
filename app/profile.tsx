@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { useRouter } from "expo-router";
+import ProfileForm from "@/components/ProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 import userService from "@/services/userService";
-import ProfileForm from "@/components/ProfileForm";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -96,6 +96,9 @@ export default function ProfilePage() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backBtnText}>← Back</Text>
+        </TouchableOpacity>
         <Image
           source={
             profile.avatarId
@@ -141,6 +144,17 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 48,
   },
+  backBtn: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    elevation: 1,
+  },
+  backBtnText: { color: "#0a7ea4", fontWeight: "bold", fontSize: 16 },
   avatar: {
     width: 110,
     height: 110,

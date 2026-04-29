@@ -1,17 +1,18 @@
+import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
+import recipeService from "@/services/recipeService";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Text,
   Image,
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import recipeService from "@/services/recipeService";
-import { useRouter } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
 
 const difficulties = ["Easy", "Medium", "Hard"];
 const categories = ["Breakfast", "Lunch", "Dinner", "Dessert"];
@@ -78,6 +79,9 @@ export default function CreateRecipe() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFF5E6" }}>
       <ScrollView style={styles.container}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backBtnText}>← Back</Text>
+        </TouchableOpacity>
         <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
           📝 Create Recipe
         </Text>
@@ -194,25 +198,36 @@ export default function CreateRecipe() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF5E6",
-    padding: 16,
-    paddingTop: 34,
+    backgroundColor: Colors.light.backgroundAlt,
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
-  imagePicker: {
+  backBtn: {
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: "#fff",
+    alignSelf: "flex-start",
     borderRadius: 8,
-    height: 180,
+    elevation: 1,
+  },
+  backBtnText: { color: "#0a7ea4", fontWeight: "bold", fontSize: 16 },
+  imagePicker: {
+    backgroundColor: Colors.light.white,
+    borderRadius: 12,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#eee",
+    marginBottom: 18,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    borderStyle: "dashed",
     overflow: "hidden",
   },
   imagePickerText: {
-    color: "#0a7ea4",
-    fontWeight: "bold",
-    fontSize: 18,
+    color: Colors.light.primary,
+    fontWeight: "800",
+    fontSize: 16,
   },
   recipeImage: {
     width: "100%",
@@ -220,36 +235,57 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   input: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#eee",
+    backgroundColor: Colors.light.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    marginBottom: 14,
+    fontSize: 15,
+    borderWidth: 1.5,
+    borderColor: Colors.light.border,
+    color: Colors.light.text,
   },
   sectionTitle: {
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 18,
-    marginTop: 16,
-    marginBottom: 8,
-    color: "#0a7ea4",
+    marginTop: 18,
+    marginBottom: 10,
+    color: Colors.light.text,
+    letterSpacing: 0.2,
   },
   addBtn: {
-    backgroundColor: "#0a7ea4",
-    borderRadius: 8,
-    padding: 10,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
     alignItems: "center",
     marginBottom: 12,
+    shadowColor: Colors.light.primary,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  addBtnText: { color: "#fff", fontWeight: "bold" },
+  addBtnText: {
+    color: Colors.light.white,
+    fontWeight: "700",
+    fontSize: 14,
+  },
   saveBtn: {
-    backgroundColor: "#FF6B6B",
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 28,
     marginBottom: 24,
+    shadowColor: Colors.light.secondary,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  saveBtnText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
+  saveBtnText: {
+    color: Colors.light.white,
+    fontWeight: "800",
+    fontSize: 16,
+  },
 });

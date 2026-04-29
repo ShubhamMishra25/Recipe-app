@@ -12,7 +12,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -22,12 +22,12 @@ export default function MealPlannerScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [weekStart, setWeekStart] = useState(getMonday());
-  const [plan, setPlan] = useState(null);
-  const [recipes, setRecipes] = useState([]);
+  const [plan, setPlan] = useState<any>(null);
+  const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
   function getMonday() {
     const today = new Date();
@@ -60,7 +60,7 @@ export default function MealPlannerScreen() {
         });
         setPlan(newPlan);
       }
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to load meal plan");
     }
 
@@ -87,16 +87,16 @@ export default function MealPlannerScreen() {
       setModalVisible(false);
       setSelectedSlot(null);
       setSelectedRecipe(null);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to add recipe to plan");
     }
   }
 
-  async function removeSlot(slotId) {
+  async function removeSlot(slotId: string) {
     try {
       await mealPlanService.removeSlot(slotId);
       await loadPlan();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert("Error", "Failed to remove recipe");
     }
   }
@@ -117,7 +117,7 @@ export default function MealPlannerScreen() {
     );
   }
 
-  const slotsByDayAndMeal = {};
+  const slotsByDayAndMeal: Record<string, any> = {};
   for (const slot of plan.slots || []) {
     const key = `${slot.dayKey}-${slot.mealType}`;
     slotsByDayAndMeal[key] = slot;
@@ -125,6 +125,9 @@ export default function MealPlannerScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <Text style={styles.backBtnText}>← Back</Text>
+      </TouchableOpacity>
       <View style={styles.header}>
         <Text style={styles.title}>📅 Weekly Meal Planner</Text>
         <Text style={styles.weekLabel}>Week of {weekStart}</Text>
@@ -208,7 +211,7 @@ export default function MealPlannerScreen() {
 
       <TouchableOpacity
         style={styles.groceryBtn}
-        onPress={() => router.push("/grocery-list")}
+        onPress={() => router.push("/grocery-list" as any)}
       >
         <Text style={styles.groceryBtnText}>📋 View Grocery List</Text>
       </TouchableOpacity>
@@ -280,6 +283,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
+  backBtn: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    elevation: 1,
+  },
+  backBtnText: { color: "#0a7ea4", fontWeight: "bold", fontSize: 16 },
   title: {
     fontWeight: "bold",
     fontSize: 28,
@@ -313,9 +328,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#0a7ea4",
-  },
-  navBtnToday: {
-    backgroundColor: "#0a7ea4",
   },
   dayCard: {
     marginHorizontal: 16,

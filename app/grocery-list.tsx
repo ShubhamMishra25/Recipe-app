@@ -19,7 +19,7 @@ export default function GroceryListScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { planId } = useLocalSearchParams();
-  const [groceryList, setGroceryList] = useState([]);
+  const [groceryList, setGroceryList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkedItems, setCheckedItems] = useState(new Set());
   const [weekStart, setWeekStart] = useState(
@@ -85,7 +85,7 @@ export default function GroceryListScreen() {
     setLoading(false);
   }
 
-  function toggleItem(id) {
+  function toggleItem(id: string) {
     const newChecked = new Set(checkedItems);
     if (newChecked.has(id)) {
       newChecked.delete(id);
@@ -123,7 +123,7 @@ export default function GroceryListScreen() {
     );
   }
 
-  const groupedByRecipe = {};
+  const groupedByRecipe: Record<string, any[]> = {};
   for (const item of groceryList) {
     if (!groupedByRecipe[item.recipeName]) {
       groupedByRecipe[item.recipeName] = [];
@@ -153,10 +153,14 @@ export default function GroceryListScreen() {
           <FlatList
             data={Object.entries(groupedByRecipe)}
             keyExtractor={([recipeName]) => recipeName}
-            renderItem={({ item: [recipeName, items] }) => (
+            renderItem={({
+              item: [recipeName, items],
+            }: {
+              item: [string, any[]];
+            }) => (
               <View style={styles.recipeGroup}>
                 <Text style={styles.recipeGroupTitle}>{recipeName}</Text>
-                {items.map((item) => (
+                {items.map((item: any) => (
                   <TouchableOpacity
                     key={item.id}
                     style={styles.groceryItem}

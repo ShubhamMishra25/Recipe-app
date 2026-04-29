@@ -1,16 +1,17 @@
+import { Colors } from "@/constants/Colors";
+import recipeService from "@/services/recipeService";
+import { useKeepAwake } from "expo-keep-awake";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  Dimensions,
-  ActivityIndicator,
+    ActivityIndicator,
+    Dimensions,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useKeepAwake } from "expo-keep-awake";
-import recipeService from "@/services/recipeService";
 
 export default function CookingMode() {
   useKeepAwake(); // Keeps the screen awake
@@ -38,9 +39,10 @@ export default function CookingMode() {
     );
   }
 
-  const steps = Array.isArray(recipe.steps) && recipe.steps.length > 0
-    ? recipe.steps
-    : ["No steps available."];
+  const steps =
+    Array.isArray(recipe.steps) && recipe.steps.length > 0
+      ? recipe.steps
+      : ["No steps available."];
 
   const nextStep = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1));
   const prevStep = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -88,83 +90,102 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#151718",
+    backgroundColor: Colors.light.backgroundAlt,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    paddingHorizontal: 24,
   },
   header: {
     alignItems: "center",
     marginBottom: 32,
   },
   title: {
-    color: "#fff",
+    color: Colors.light.text,
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "900",
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   recipeTitle: {
-    color: "#FFB300",
+    color: Colors.light.warning,
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "800",
   },
   stepContainer: {
-    backgroundColor: "#222",
-    borderRadius: 18,
-    padding: 32,
+    backgroundColor: Colors.light.white,
+    borderRadius: 20,
+    paddingHorizontal: 28,
+    paddingVertical: 32,
     width: width - 48,
     alignItems: "center",
     marginBottom: 32,
-    minHeight: 180,
+    minHeight: 200,
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   stepLabel: {
-    color: "#FFB300",
-    fontSize: 18,
+    color: Colors.light.primary,
+    fontSize: 14,
     marginBottom: 12,
-    fontWeight: "bold",
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   stepText: {
-    color: "#fff",
+    color: Colors.light.text,
     fontSize: 22,
     textAlign: "center",
-    fontWeight: "bold",
-    letterSpacing: 1,
+    fontWeight: "700",
+    lineHeight: 32,
   },
   navRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: width - 48,
     marginBottom: 32,
+    gap: 12,
   },
   navBtn: {
-    backgroundColor: "#0a7ea4",
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     alignItems: "center",
     flex: 1,
-    marginHorizontal: 8,
+    shadowColor: Colors.light.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 2,
   },
   navBtnDisabled: {
-    backgroundColor: "#444",
+    backgroundColor: Colors.light.border,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   navBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
+    color: Colors.light.white,
+    fontWeight: "800",
+    fontSize: 14,
   },
   exitBtn: {
-    backgroundColor: "#FF6B6B",
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: Colors.light.error,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 16,
     width: width - 48,
+    shadowColor: Colors.light.error,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 2,
   },
   exitBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
+    color: Colors.light.white,
+    fontWeight: "800",
+    fontSize: 16,
   },
 });
