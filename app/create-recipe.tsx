@@ -29,6 +29,7 @@ export default function CreateRecipe() {
   const [ingredients, setIngredients] = useState<string[]>([""]);
   const [steps, setSteps] = useState<string[]>([""]);
   const [image, setImage] = useState<string | null>(null);
+  const [imageAsset, setImageAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
   const addIngredient = () => setIngredients([...ingredients, ""]);
   const addStep = () => setSteps([...steps, ""]);
@@ -43,16 +44,27 @@ export default function CreateRecipe() {
 
     if (!result.canceled && result.assets.length > 0) {
       setImage(result.assets[0].uri);
+      setImageAsset(result.assets[0]);
     }
   };
 
   const handleSave = async () => {
     if (!title.trim() || !desc.trim()) return;
     let imageFile = null;
-    if (image) {
-      const response = await fetch(image);
-      const blob = await response.blob();
-      imageFile = new File([blob], "recipe-image.jpg", { type: blob.type });
+    if (imageAsset) {
+      imageFile = {
+        uri: imageAsset.uri,
+        name: imageAsset.fileName || "recipe-image.jpg",
+        type: imageAsset.mimeType || "image/jpeg",
+        size: imageAsset.fileSize || 0,
+      };
+    } else if (image) {
+      imageFile = {
+        uri: image,
+        name: "recipe-image.jpg",
+        type: "image/jpeg",
+        size: 0,
+      };
     }
     const data = {
       title,

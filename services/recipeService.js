@@ -1,5 +1,5 @@
-import { ID, Query } from "react-native-appwrite";
-import { databases, storage, config } from "./appwrite";
+import { ID } from "react-native-appwrite";
+import { config, databases, storage } from "./appwrite";
 
 const dbId = config.db;
 const colId = config.col.recipes;
@@ -31,11 +31,34 @@ const recipeService = {
     try {
       let imageId = null;
       if (imageFile) {
-        const fileRes = await storage.createFile(bucketId, ID.unique(), imageFile);
-        imageId = fileRes.$id;
+        try {
+          const fileToUpload = {
+            uri: imageFile.uri,
+            name: imageFile.name,
+            type: imageFile.type,
+            size: imageFile.size,
+          };
+
+          const fileRes = await storage.createFile(
+            bucketId,
+            ID.unique(),
+            fileToUpload,
+          );
+          imageId = fileRes.$id;
+        } catch (uploadError) {
+          console.error(
+            "Image upload failed, continuing without image:",
+            uploadError,
+          );
+        }
       }
       const docData = { ...data, imageId };
-      const response = await databases.createDocument(dbId, colId, ID.unique(), docData);
+      const response = await databases.createDocument(
+        dbId,
+        colId,
+        ID.unique(),
+        docData,
+      );
       return { data: response, error: null };
     } catch (error) {
       return { error: error.message };
@@ -47,11 +70,40 @@ const recipeService = {
     try {
       let imageId = data.imageId;
       if (imageFile) {
-        const fileRes = await storage.createFile(bucketId, ID.unique(), imageFile);
-        imageId = fileRes.$id;
+        try {
+          const fileToUpload = {
+            uri: imageFile.uri,
+            name: imageFile.name,
+            type: imageFile.type,
+            size: imageFile.size,
+          };
+
+          const fileRes = await storage.createFile(
+            bucketId,
+            ID.unique(),
+            fileToUpload,
+          );
+          if (fileRes && fileRes.$id) {
+            imageId = fileRes.$id;
+          } else {
+            console.warn(
+              "File uploaded but no $id in response, keeping old imageId",
+            );
+          }
+        } catch (uploadError) {
+          console.error(
+            "Image upload error (continuing without image):",
+            uploadError,
+          );
+        }
       }
       const docData = { ...data, imageId };
-      const response = await databases.updateDocument(dbId, colId, recipeId, docData);
+      const response = await databases.updateDocument(
+        dbId,
+        colId,
+        recipeId,
+        docData,
+      );
       return { data: response, error: null };
     } catch (error) {
       return { error: error.message };

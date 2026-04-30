@@ -1,7 +1,11 @@
 import { Colors } from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
+import recipeService from "@/services/recipeService";
+import savedRecipeService from "@/services/savedRecipeService";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   SafeAreaView,
@@ -11,21 +15,50 @@ import {
   View,
 } from "react-native";
 
-const savedRecipes = [
-  {
-    id: "1",
-    title: "Berry Smoothie Bowl",
-    image: require("@/assets/images/smoothie-bowl.jpg"),
-  },
-  {
-    id: "2",
-    title: "Avocado Toast",
-    image: require("@/assets/images/avocado-toast.jpg"),
-  },
-];
-
 export default function SavedRecipes() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [savedRecipes, setSavedRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSavedRecipes();
+  }, [user]);
+
+  const fetchSavedRecipes = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    // Get all user's saved recipe links
+    const { data: savedLinks, error } =
+      await savedRecipeService.getSavedRecipes(user.$id);
+
+    if (error) {
+      console.error(error);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch details for each recipe
+    const recipes = [];
+    for (const link of savedLinks) {
+      const { data: recipe } = await recipeService.getRecipeById(link.recipeId);
+      if (recipe) {
+        recipes.push(recipe);
+      }
+    }
+
+    setSavedRecipes(recipes);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -36,13 +69,20 @@ export default function SavedRecipes() {
         <Text style={styles.header}>💾 Saved Recipes</Text>
         <FlatList
           data={savedRecipes}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.$id}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              onPress={() => router.push(`/recipe/${item.id}`)}
+              onPress={() => router.push(`/recipe/${item.$id}`)}
             >
-              <Image source={item.image} style={styles.image} />
+              <Image
+                source={
+                  item.imageId
+                    ? { uri: recipeService.getRecipeImageUrl(item.imageId) }
+                    : require("@/assets/images/spaghetti.jpg")
+                }
+                style={styles.image}
+              />
               <Text style={styles.title}>{item.title}</Text>
             </TouchableOpacity>
           )}

@@ -4,14 +4,14 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 
 const difficulties = ["Easy", "Medium", "Hard"];
@@ -26,6 +26,7 @@ export default function EditRecipe() {
   const [ingredients, setIngredients] = useState<string[]>([""]);
   const [steps, setSteps] = useState<string[]>([""]);
   const [image, setImage] = useState<string | null>(null);
+  const [imageAsset, setImageAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +60,6 @@ export default function EditRecipe() {
       setLoading(false);
     };
     fetchRecipe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const addIngredient = () => setIngredients([...ingredients, ""]);
@@ -67,7 +67,7 @@ export default function EditRecipe() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.7,
@@ -75,38 +75,57 @@ export default function EditRecipe() {
 
     if (!result.canceled && result.assets.length > 0) {
       setImage(result.assets[0].uri);
+      setImageAsset(result.assets[0]);
     }
   };
 
   const handleSave = async () => {
     if (!recipe) return;
-    let imageFile = null;
-    if (image) {
-      const response = await fetch(image);
-      const blob = await response.blob();
-      imageFile = new File([blob], "recipe.jpg", { type: blob.type });
-    }
-    const data = {
-      title,
-      description: desc,
-      ingredients,
-      steps,
-      cookingTime: parseInt(cookingTime, 10),
-      servings: parseInt(servings, 10),
-      difficulty,
-      category,
-      updatedAt: new Date().toISOString(),
-      imageId: recipe.imageId,
-    };
-    const result = await recipeService.updateRecipe(
-      recipe.$id,
-      data,
-      imageFile,
-    );
-    if (!result.error) {
-      router.back();
-    } else {
-      alert("Failed to update recipe: " + result.error);
+    try {
+      let imageFile = null;
+      if (imageAsset) {
+        imageFile = {
+          uri: imageAsset.uri,
+          name: imageAsset.fileName || "recipe.jpg",
+          type: imageAsset.mimeType || "image/jpeg",
+          size: imageAsset.fileSize || 0,
+        };
+      } else if (image) {
+        imageFile = {
+          uri: image,
+          name: "recipe.jpg",
+          type: "image/jpeg",
+          size: 0,
+        };
+      }
+
+      const data = {
+        title,
+        description: desc,
+        ingredients,
+        steps,
+        cookingTime: parseInt(cookingTime, 10),
+        servings: parseInt(servings, 10),
+        difficulty,
+        category,
+        updatedAt: new Date().toISOString(),
+        imageId: recipe.imageId,
+      };
+      console.log("Updating recipe with data:", data);
+      const result = await recipeService.updateRecipe(
+        recipe.$id,
+        data,
+        imageFile,
+      );
+      if (!result.error) {
+        router.back();
+      } else {
+        console.error("Recipe update error:", result.error);
+        alert("Failed to update recipe: " + result.error);
+      }
+    } catch (error: any) {
+      console.error("Save error:", error);
+      alert("Error: " + (error.message || String(error)));
     }
   };
 

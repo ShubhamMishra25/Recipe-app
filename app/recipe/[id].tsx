@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import mealPlanService from "@/services/mealPlanService";
 import recipeService from "@/services/recipeService";
+import savedRecipeService from "@/services/savedRecipeService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -34,17 +35,31 @@ export default function RecipeDetail() {
   const [userComment, setUserComment] = useState("");
   const [comments, setComments] = useState<any[]>([]);
 
+  // Saved recipe state
+  const [isSaved, setIsSaved] = useState(false);
+  const [savedDocId, setSavedDocId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchRecipe = async () => {
       setLoading(true);
       const { data } = await recipeService.getRecipeById(id);
       if (data) setRecipe(data);
+
+      if (user && data) {
+        const { isSaved, docId } = await savedRecipeService.isRecipeSaved(
+          user.$id,
+          data.$id,
+        );
+        setIsSaved(isSaved);
+        setSavedDocId(docId);
+      }
+
       setLoading(false);
     };
     fetchRecipe();
     // Optionally, fetch comments from Appwrite here when implementing comments collection
     setComments([]); // Clear or fetch comments
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     loadMealPlans();
@@ -102,6 +117,28 @@ export default function RecipeDetail() {
     }
   };
 
+  const toggleSaved = async () => {
+    if (!user || !recipe) return;
+
+    if (isSaved && savedDocId) {
+      const result = await savedRecipeService.removeSavedRecipe(savedDocId);
+      if (!result.error) {
+        setIsSaved(false);
+        setSavedDocId(null);
+      } else {
+        Alert.alert("Error", "Could not remove saved recipe.");
+      }
+    } else {
+      const result = await savedRecipeService.saveRecipe(user.$id, recipe.$id);
+      if (!result.error && result.data) {
+        setIsSaved(true);
+        setSavedDocId(result.data.$id);
+      } else {
+        Alert.alert("Error", result.error || "Could not save recipe.");
+      }
+    }
+  };
+
   const handleDelete = async () => {
     Alert.alert(
       "Delete Recipe",
@@ -149,8 +186,8 @@ export default function RecipeDetail() {
         />
         <View style={styles.headerRow}>
           <Text style={styles.title}>{recipe.title}</Text>
-          <TouchableOpacity style={styles.saveBtn}>
-            <Text style={styles.saveBtnText}>♡</Text>
+          <TouchableOpacity style={styles.saveBtn} onPress={toggleSaved}>
+            <Text style={styles.saveBtnText}>{isSaved ? "♥" : "♡"}</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.desc}>{recipe.description}</Text>
